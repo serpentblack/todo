@@ -1,0 +1,21 @@
+name: Deploy a Render (después de CI)
+
+on:
+  workflow_run:
+    workflows: ["CI PHP"]   # ← nombre EXACTO de tu workflow de CI
+    types: [completed]
+    branches: [main]
+
+concurrency:
+  group: render-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Disparar Deploy Hook de Render
+        run: curl -fsS -X POST "$RENDER_DEPLOY_HOOK_URL"
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
